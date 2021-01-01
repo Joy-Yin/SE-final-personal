@@ -3,6 +3,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 import java.util.Scanner;
+import java.util.ArrayList;
 
 public class score {
 	
@@ -16,26 +17,10 @@ public class score {
 		while(scFile.hasNext()) {
 			String[] data = scFile.nextLine().split(" ");
 			for(int i = 6; i < data.length; i++) {
-				if(studentID.equals(data[i]) && semester.equals(data[0])) {//打開該學生選修的課程成績的檔案
-					String openFile = semester + data[1] + data[2] + ".txt";
-					try {
-						FileReader readScore = new FileReader(openFile);
-					}
-					catch(FileNotFoundException e) {
-						generateCourseGrade(semester, data[1], data[2]);
-					}
-					finally {
-						FileReader readScore = new FileReader(openFile);
-						Scanner scScore = new Scanner(readScore);
-						while(scScore.hasNext()) {
-							String[] student = scScore.nextLine().split(" ");
-							if(studentID.equals(student[0])) {
-								enterScore += data[2] + " " + student[2] + "\n";
-								scScore.close();
-								continue nextCourse;
-							}
-						}
-					}
+				String[] score = data[i].split("-");
+				if(studentID.equals(score[0]) && semester.equals(data[0])) {
+					enterScore += data[2] + " " + score[1] + "\n";
+					continue nextCourse;
 				}
 			}
 		}
@@ -49,137 +34,129 @@ public class score {
 		writer.close();
 	}
 	
-	//學生檢查各學期各課程成績(11) *結合GUI時須再修改此方法
-	public void checkGrade(String semester, String studentID) throws IOException{
+	//學生檢查各學期各課程成績(11)
+	public String[] checkGrade(String semester, String studentID) throws IOException{
 		String personalGrade = semester + studentID + ".txt";
 		String studentName = searchName(studentID);
-		FileReader reader;
-		Scanner scFile;
-		try {
-			reader = new FileReader(personalGrade);
-		}
-		catch(FileNotFoundException e) {
-			generatePersonalGrade(semester, studentID);
-		}
-		finally {
-			reader = new FileReader(personalGrade);
-			scFile = new Scanner(reader);
-			System.out.println(semester + "學期" + studentName + "修課成績");
-			System.out.println("課程:\t成績:");
-			while (scFile.hasNext())
-				System.out.println(scFile.nextLine());
+		String[] grade;
+		generatePersonalGrade(semester, studentID);
+		FileReader reader = new FileReader(personalGrade);
+		Scanner scFile = new Scanner(reader);
+		ArrayList<String> temp = new ArrayList<String>();
+		temp.add(semester + "學期" + studentName + "修課成績");
+		String print = scFile.nextLine();
+		if(print.equals("無選修課程")) {
+			temp.add(print);
 			reader.close();
 			scFile.close();
+			grade = new String[temp.size()];
+			for(int i = 0; i < temp.size(); i++) {
+				grade[i] = temp.get(i);
+			}
+			return grade;
 		}
+		temp.add("課程: 成績:");
+		temp.add(print);
+		while (scFile.hasNext())
+			temp.add(scFile.nextLine());
+		reader.close();
+		scFile.close();
+		grade = new String[temp.size()];
+		for(int i = 0; i < temp.size(); i++) {
+			grade[i] = temp.get(i);
+		}
+		return grade;
 	}
 	
-	//學生列印所有學期選修課程的成績單(12) *結合GUI時須再修改此方法
-	public void printGrade(String studentID) throws IOException {
+	//學生列印所有學期選修課程的成績單(12)
+	public String[] printGrade(String studentID) throws IOException {
 		FileReader reader = new FileReader("account.txt");
 		Scanner scFile = new Scanner(reader);
+		ArrayList<String> temp = new ArrayList<String>();
+		String[] grade;
 		while(scFile.hasNext()) {
 			String[] student = scFile.nextLine().split(" ");
 			if(studentID.equals(student[0])) {
 				for(int i = Integer.parseInt(student[3]); i < Integer.parseInt(student[3]) + 4; i++) {
 					for(int j = 1; j < 3; j++) {
 						String semester = Integer.toString(i) + Integer.toString(j);
-						String openFile = semester + studentID + ".txt";
-						try {
-							reader = new FileReader(openFile);
-						}
-						catch(FileNotFoundException e) {
-							generatePersonalGrade(semester, studentID);
-						}
-						finally {
-							reader = new FileReader(openFile);
-							scFile = new Scanner(reader);
-							System.out.println(semester + "學期" + student[2] +"的成績");
-							while(scFile.hasNext()) {
-								System.out.println(scFile.nextLine());
-							}
+						String[] aSemester = checkGrade(semester, studentID);
+						for(int k = 0; k < aSemester.length; k++) {
+							temp.add(aSemester[k]);
 						}
 					}
 				}
-				scFile.close();
-				return;
 			}
 		}
+		grade = new String[temp.size()];
+		for(int i = 0; i < temp.size(); i++) {
+			grade[i] = temp.get(i);
+		}
+		scFile.close();
+		return grade;
 	}
 	
-	//教授產生其授課課程之成績(14) *不確定是否需要顯示出來還是建立檔案就好
-	public void generateCourseGrade(String semester, String subjectID, String subjectName) throws IOException {
-		String fileName = semester + subjectID + subjectName + ".txt";
-		FileReader reader;
-		Scanner scFile;
-		try {
-			reader = new FileReader(fileName);
-			scFile = new Scanner(reader);
-			System.out.println(semester + subjectName + "學生修課成績");
-			System.out.println("學號:\t姓名:\t成績:");
-			while(scFile.hasNext()) {
-				System.out.println(scFile.nextLine());
-			}
-			reader.close();
-			scFile.close();
-		}
-		catch(FileNotFoundException e) {
-			String courseGrade = "";
-			reader = new FileReader("classes.txt");
-			scFile = new Scanner(reader);
-			System.out.println(semester + subjectName + "學生修課成績");
-			System.out.println("學號:\t姓名:\t成績:");
-			while (scFile.hasNext()) {
-				String[] data = scFile.nextLine().split(" ");
-				if (data[0].equals(semester) && data[1].equals(subjectID) && data[2].equals(subjectName)) {
-					FileWriter writer = new FileWriter(fileName);
-					for (int i = 6; i < data.length; i++) {
-						String studentName = searchName(data[i]);
-						courseGrade += data[i] + " " + studentName + " -\n";
-						System.out.println(data[i] + studentName + " -");
-					}
-					writer.write(courseGrade);
-					writer.flush();
-					writer.close();
-					reader.close();
-					scFile.close();
-					return;
+	//教授產生其授課課程之成績(14)(全部科目)
+	public String[] generateAllCourseGrade(String professorName) throws IOException {
+		FileReader reader = new FileReader("classes.txt");
+		Scanner scFile = new Scanner(reader);
+		String[] courseList;
+		ArrayList<String> temp = new ArrayList<String>();
+		while(scFile.hasNext()) {
+			String[] data = scFile.nextLine().split(" ");
+			if(data[4].equals(professorName)) {
+				String courseGrade = "";
+				courseGrade += data[0] + " " + data[1] + " " + data[2] + " ";
+				for(int i = 6; i < data.length; i++) {
+					String[] studentInfo = data[i].split("-");
+					String studentName = searchName(studentInfo[0]);
+					courseGrade += studentInfo[0] + studentName + "-" + studentInfo[1] + " ";
 				}
+				temp.add(courseGrade);
 			}
-			System.out.println("無此科目");
-			reader.close();
-			scFile.close();
 		}
+		courseList = new String[temp.size()];
+		for(int i = 0; i < temp.size(); i++) {
+			courseList[i] = temp.get(i);
+		}
+		scFile.close();
+		return courseList;
 	}
 	
 	//管理員、教授輸入或更新某個學生的成績(9, 13)
 	public String updateScore(String semester, String subjectID, String subjectName, String studentName, int studentScore) throws IOException{
-		String openFile = semester + subjectID + subjectName + ".txt";//各個科目的成績檔案
+		FileReader reader = new FileReader("classes.txt");
+		Scanner scFile = new Scanner(reader);
 		String enterScore = "";
-		FileReader reader;
-		Scanner scFile;
-		try {
-			reader = new FileReader(openFile);
-		}
-		catch(FileNotFoundException e) {
-			generateCourseGrade(semester, subjectID, subjectName);
-		}
-		finally {
-			reader = new FileReader(openFile);
-			scFile = new Scanner(reader);
-			while(scFile.hasNext()) {
-				String[] studentList = scFile.nextLine().split(" ");
-				if(studentName.equals(studentList[1])) {
-					studentList[2] = Integer.toString(studentScore);
+		String studentID = searchID(studentName);
+		while(scFile.hasNext()) {
+			String[] data = scFile.nextLine().split(" ");
+			if(data[0].equals(semester) && data[1].equals(subjectID)) {//找到要修改的科目
+				for(int i = 0; i < 6; i++) {
+					enterScore += data[i] + " ";
 				}
-				enterScore += studentList[0] + " " + studentList[1] + " " + studentList[2] + "\n";
+				for(int i = 6; i < data.length; i++) {
+					String[] student = data[i].split("-");
+					if(student[0].equals(studentID)) {//找到要修改的學生
+						student[1] = Integer.toString(studentScore);
+					}
+					enterScore += student[0] + "-" + student[1] + " ";
+				}
+				enterScore += "\n";
 			}
-			reader.close();
-			scFile.close();
-			FileWriter writer = new FileWriter(openFile);
-			writer.write(enterScore);
-			writer.flush();
-			writer.close();
+			else {
+				for(String info: data) {
+					enterScore += info + " ";
+				}
+				enterScore += "\n";
+			}
 		}
+		reader.close();
+		scFile.close();
+		FileWriter writer = new FileWriter("classes.txt");
+		writer.write(enterScore);
+		writer.flush();
+		writer.close();
 		return "成功";
 	}
 	
@@ -191,6 +168,20 @@ public class score {
 			if(ID.equals(data[0])) {
 				scFile.close();
 				return data[2];
+			}
+		}
+		scFile.close();
+		return "無效輸入";
+	}
+	
+	private String searchID(String studentName) throws IOException {
+		FileReader reader = new FileReader("account.txt");
+		Scanner scFile = new Scanner(reader);
+		while(scFile.hasNext()) {
+			String[] data = scFile.nextLine().split(" ");
+			if(studentName.equals(data[2])) {
+				scFile.close();
+				return data[0];
 			}
 		}
 		scFile.close();
