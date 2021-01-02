@@ -19,7 +19,7 @@ public class score {
 			for(int i = 6; i < data.length; i++) {
 				String[] score = data[i].split("-");
 				if(studentID.equals(score[0]) && semester.equals(data[0])) {
-					enterScore += data[2] + " " + score[1] + "\n";
+					enterScore += semester + " " + data[2] + " " + score[1] + "\n";
 					continue nextCourse;
 				}
 			}
@@ -34,19 +34,53 @@ public class score {
 		writer.close();
 	}
 	
+	//查詢某學生修課學期
+	public String[] checkSemester(String studentID) throws FileNotFoundException {
+		String[] semester;
+		ArrayList<String> temp = new ArrayList<String>();
+		FileReader reader = new FileReader("classes.txt");
+		Scanner scFile = new Scanner(reader);
+		nextCourse:
+		while(scFile.hasNext()) {
+			String[] data = scFile.nextLine().split(" ");
+			for(int i = 6; i < data.length; i++) {
+				String[] score = data[i].split("-");
+				if(score[0].equals(studentID)) {
+					if(!isExist(temp,data[0])) {
+						temp.add(data[0]);
+						continue nextCourse;
+					}
+				}
+			}
+		}
+		semester = new String[temp.size()];
+		for(int i = 0; i < temp.size(); i++) {
+			semester[i] = temp.get(i);
+		}
+		scFile.close();
+		return semester;
+	}
+	
+	//檢查陣列是否重複
+	private boolean isExist(ArrayList<String> list, String s) {
+		for(int i = 0; i < list.size(); i++) {
+			if(s.equals(list.get(i))) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	//學生檢查各學期各課程成績(11)
 	public String[] checkGrade(String semester, String studentID) throws IOException{
 		String personalGrade = semester + studentID + ".txt";
-		String studentName = searchName(studentID);
 		String[] grade;
 		generatePersonalGrade(semester, studentID);
 		FileReader reader = new FileReader(personalGrade);
 		Scanner scFile = new Scanner(reader);
 		ArrayList<String> temp = new ArrayList<String>();
-		temp.add(semester + "學期" + studentName + "修課成績");
 		String print = scFile.nextLine();
 		if(print.equals("無選修課程")) {
-			temp.add(print);
 			reader.close();
 			scFile.close();
 			grade = new String[temp.size()];
@@ -55,7 +89,6 @@ public class score {
 			}
 			return grade;
 		}
-		temp.add("課程: 成績:");
 		temp.add(print);
 		while (scFile.hasNext())
 			temp.add(scFile.nextLine());
@@ -160,6 +193,7 @@ public class score {
 		return "成功";
 	}
 	
+	//透過學號搜尋名字
 	private String searchName(String ID) throws IOException {
 		FileReader reader = new FileReader("account.txt");
 		Scanner scFile = new Scanner(reader);
@@ -174,6 +208,7 @@ public class score {
 		return "無效輸入";
 	}
 	
+	//透過名字搜尋學號
 	private String searchID(String studentName) throws IOException {
 		FileReader reader = new FileReader("account.txt");
 		Scanner scFile = new Scanner(reader);
