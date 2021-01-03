@@ -157,14 +157,14 @@ public class score {
 	}
 	
 	//管理員、教授輸入或更新某個學生的成績(9, 13)
-	public String updateScore(String semester, String subjectID, String subjectName, String studentName, int studentScore) throws IOException{
+	public String updateScore(String semester, String subjectName, String studentName, int studentScore) throws IOException{
 		FileReader reader = new FileReader("classes.txt");
 		Scanner scFile = new Scanner(reader);
 		String enterScore = "";
 		String studentID = searchID(studentName);
 		while(scFile.hasNext()) {
 			String[] data = scFile.nextLine().split(" ");
-			if(data[0].equals(semester) && data[1].equals(subjectID)) {//找到要修改的科目
+			if(data[0].equals(semester) && data[2].equals(subjectName)) {//找到要修改的科目
 				for(int i = 0; i < 6; i++) {
 					enterScore += data[i] + " ";
 				}
